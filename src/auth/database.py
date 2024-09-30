@@ -2,14 +2,13 @@ from datetime import datetime
 from typing import AsyncGenerator
 
 from fastapi import Depends
-from fastapi_users.db import SQLAlchemyBaseUserTableUUID, SQLAlchemyUserDatabase
-from fastapi_users_db_sqlalchemy import SQLAlchemyBaseUserTable
+from fastapi_users.db import SQLAlchemyUserDatabase, SQLAlchemyBaseUserTable
 from sqlalchemy import TIMESTAMP, Boolean, Integer, String, ForeignKey
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped
 
-from a_fast_api.fast_api.src.config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
-from a_fast_api.fast_api.src.auth.models import roles
+from config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
+from .models import role
 
 DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
@@ -17,9 +16,10 @@ DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{D
 class Base(DeclarativeBase):
     pass
 
-
+# advice: называть классы и таблицы в ед числе, чтобы были одинаковые имена
+# и не было ошибок
 class User(SQLAlchemyBaseUserTable[int], Base):
-    __tablename__ = 'users'
+    __tablename__ = 'user'
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     email: Mapped[str] = mapped_column(
@@ -29,7 +29,7 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     registered_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, default=datetime.utcnow
     )
-    role_id: Mapped[int] = mapped_column(Integer, ForeignKey(roles.c.id))
+    role_id: Mapped[int] = mapped_column(Integer, ForeignKey(role.c.id))
     hashed_password: Mapped[str] = mapped_column(
         String(length=1024), nullable=False
     )
@@ -45,10 +45,17 @@ class User(SQLAlchemyBaseUserTable[int], Base):
 engine = create_async_engine(DATABASE_URL)
 async_session_maker = async_sessionmaker(engine, expire_on_commit=False)
 
+# async def create_db_and_tables():
+#     async with engine.begin() as conn:
+#         await conn.run_sync(Base.metadata.create_all)
+
+# create_db_and_tables() - удалена, т.к. юзаем миграции alembic и нам не к чему создавать
+# и удалять каждый раз новые таблицы 
+
 async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session
 
-
+# Depends отвечает за инъекцию зависимостей
 async def get_user_db(session: AsyncSession = Depends(get_async_session)):
     yield SQLAlchemyUserDatabase(session, User)

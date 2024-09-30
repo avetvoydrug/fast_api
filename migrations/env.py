@@ -5,8 +5,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
-from a_fast_api.fast_api.src.auth.models import metadata
-from a_fast_api.fast_api.src.config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
+from src.auth.models import metadata
+from src.config import DB_HOST, DB_NAME, DB_PASS, DB_PORT, DB_USER
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -76,7 +76,9 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata
+            connection=connection, 
+            target_metadata=target_metadata,
+            compare_server_default=True
         )
 
         with context.begin_transaction():
