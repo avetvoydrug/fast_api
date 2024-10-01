@@ -1,4 +1,14 @@
-from sqlalchemy import TIMESTAMP, Boolean, Integer, String, MetaData
-from sqlalchemy.orm import DeclarativeBase, mapped_column, Mapped
+from sqlalchemy import TIMESTAMP, Column, Integer, String, MetaData, Table
 
-# from a_fast_api.fast_api.src.database import Base
+metadata = MetaData()
+
+operation = Table(
+    "operation",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("quantity", String),
+    Column("figi", String),
+    Column("instrument_type", String),
+    Column("date", TIMESTAMP),
+    Column("type", String)    
+)

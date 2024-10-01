@@ -1,3 +1,30 @@
+# best_practices
+- по заявлению создателей FastAPI:
+    - asyncpg работает в 3 раза быстрее psycopg2
+- советуют переименовывать миграции alembic, например в дату миграции + хэш, чтобы не путаться
+- SQL Injections:
+    - есть вероятность припрописании сырых запросов к БД
+        - и подставлениие аргументов от пользователя в строку запроса
+        - навредить БД
+    - например:
+        - пользователь передал user_id = '123; DROP TABLE users;
+        - функция с запросом выглядит так:
+        ```
+        #Python
+        def get_user_bio(user_id):
+            query = f' SELECT * FROM users WHERE user_id = {user_id}'
+            ...
+        ```
+        - Следовательно выполниться 2 запроса
+            - 1) выберется вся инф-я о пользователе
+            - 2) удалится таблица users
+# Записи
+- роутер объединяет набор энд поинтов
+- stmt: post, update, delete
+- query: get
+- постоянно забываю ORM: object-relation model (работа с таблцами, через объекты)
+- "так получается с Алхимией, что нам нужно не просто сэкзэкьютить,
+        а ещё забрать эти данные"
 # Cookie, JWT, Redis, database
 - куки хранятся у пользователя в браузере и передаются с каждым запросом
     - как понял - это транспорт, а уже дальше мы выбираем стратегию доставки
@@ -9,3 +36,28 @@
         - 3) подпись (расшифровать нельзя, кодируется и декод. на бэкэнде, с помощью секретного ключа)
 - redis, database надо каждый раз дёргать базу данных
     - с первым это происходит быстрее, но всё равно нужно думать как..
+
+# Изменения в написании моделей после децентрализации БД из одного файла
+- следует явно создавать переменную metadata:
+```
+#Python
+from sqlalchemy import Metadata, Table
+metadata = Metadata()
+
+some_table = Table(
+    'some_table',
+    metadata,
+    # Column('1')
+    # Column('n')
+)
+```
+
+# Изменения в migrations/env.py после добавления второго и последующих приложений
+- target_metadata = [metadata_1, metadata_2, metadata_n]
+- metadata следует импортировать из каждого файла models.py
+
+# alembic.ini changes:
+- до:
+- sqlalchemy.url = postgresql://%(DB_USER)s:%(DB_PASS)s@%(DB_HOST)s:%(DB_PORT)s/%(DB_NAME)s
+- после:
+- sqlalchemy.url = postgresql+asyncpg://%(DB_USER)s:%(DB_PASS)s@%(DB_HOST)s:%(DB_PORT)s/%(DB_NAME)s?async_fallback=True

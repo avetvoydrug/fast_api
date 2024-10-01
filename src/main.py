@@ -1,17 +1,12 @@
-from fastapi import Depends, FastAPI
-from fastapi_users import FastAPIUsers
+from fastapi import FastAPI
+from fastapi import Depends
 
-from auth.database import User
-from auth.manager import get_user_manager
+from auth.base_config import current_user
+from auth.models import User
+from auth.base_config import auth_backend, fastapi_users
 from auth.schemas import UserCreate, UserRead
-from auth.auth import auth_backend
 
-
-
-fastapi_users = FastAPIUsers[User, int](
-    get_user_manager,
-    [auth_backend],
-)
+from operations.router import router as router_operation
 
 app = FastAPI(title='why so hard to be God')
 app.include_router(
@@ -21,11 +16,11 @@ app.include_router(
 )
 app.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),
-    prefix="/auth",
-    tags=["auth"],
+    prefix="/auth", # path
+    tags=["auth"], # тэг в документации http://host:port/docs
 )
 
-current_user = fastapi_users.current_user()
+app.include_router(router_operation)
 
 @app.get("/protected-route")
 def protected_route(user: User = Depends(current_user)):
