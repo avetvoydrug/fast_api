@@ -88,7 +88,10 @@ some_table = Table(
     # Column('n')
 )
 ```
-
+## in database.py:
+```metadata = Metadata()```
+## в остальных:
+```from database import metadata```
 # Изменения в migrations/env.py после добавления второго и последующих приложений
 - target_metadata = [metadata_1, metadata_2, metadata_n]
 - metadata следует импортировать из каждого файла models.py
@@ -98,3 +101,22 @@ some_table = Table(
 - sqlalchemy.url = postgresql://%(DB_USER)s:%(DB_PASS)s@%(DB_HOST)s:%(DB_PORT)s/%(DB_NAME)s
 - после:
 - sqlalchemy.url = postgresql+asyncpg://%(DB_USER)s:%(DB_PASS)s@%(DB_HOST)s:%(DB_PORT)s/%(DB_NAME)s?async_fallback=True
+
+# Pytest-asyncio
+- 3 шага:
+    1) выбор sync/async тестирования
+    2) создание тестовой БД
+    3) переписывание зависимостей
+- тесты могут быть как внутри, так и вне папки приложения
+- conftest.py: основной файл - входная точка
+    создаются важные фикстуры, соединения с бд и т.д.
+    - привязываем метаданные к движку, чтобы таблицы создавались именно в тестовой БД 
+```
+metadata.bind = engine_test
+```
+
+### pet:
+- странички со статусами доступные только аут пользователям
+- для не аутентифицированных
+- для аут., но аут могут быть фэйки
+- кастомные группы по приглашениям

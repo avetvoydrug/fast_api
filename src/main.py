@@ -1,9 +1,12 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
+from database import create_db_and_tables
 #app
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
+from fastapi.staticfiles import StaticFiles
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -20,6 +23,8 @@ from auth.schemas import UserCreate, UserRead
 #routers
 from operations.router import router as router_operation
 from tasks.router import router as router_task
+from pages.router import router as router_template
+from chat.router import router as router_chat
 
 
 @asynccontextmanager
@@ -32,6 +37,8 @@ app = FastAPI(
     title='why so hard to be God',
     # lifespan=lifespan
     )
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(
     fastapi_users.get_auth_router(auth_backend),
@@ -46,7 +53,27 @@ app.include_router(
 
 app.include_router(router_operation)
 app.include_router(router_task)
+app.include_router(router_template)
+app.include_router(router_chat)
 
+
+origins = [
+    "http://localhost:8000",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS", "DELETE", "PATCH", "PUT"],
+    allow_headers=["Content-Type", "Set-Cookie", "Access-Control-Allow-Headers", "Access-Control-Allow-Origin",
+                   "Authorization"],
+)
+
+
+# @app.on_event("startup")
+# async def startup_event():
+#     await create_db_and_tables()
 # @app.on_event("startup")
 # async def startup_event():
 #     redis = aioredis.from_url("redis://localhost", encoding="utf8", decode_responses=True)

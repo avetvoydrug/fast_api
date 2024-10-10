@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% block head %}
+    {% endblock %}
+    <title>Натрейдил</title>
+</head>
+<body>
+    {% include "includes/header.html" %}
+    <hr>
+    <div id="content">
+        {% block content %}
+        {% for i in range(250) %}
+            Nothing :(
+        {% endfor %}
+        {% endblock %}
+    </div>
+    <footer class="border-top text-center py-3">
+        {% include "includes/footer.html" %} 
+    </footer>
+</body>
+</html>
