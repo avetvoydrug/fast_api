@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>Вход в систему</title>
+<script>
+  // Ожидаем загрузки DOM, чтобы получить доступ к форме
+  document.addEventListener("DOMContentLoaded", function() {
+    const loginForm = document.querySelector("form");
+
+    loginForm.addEventListener('submit', async (event) => {
+        event.preventDefault(); // Предотвращаем стандартную отправку формы
+
+        try {
+            const response = await fetch('/auth/jwt/login', {
+                method: 'POST',
+                body: new FormData(loginForm)
+            });
+
+            if (response.ok) {
+                // Успешный вход: перенаправляем на другую страницу
+                window.location.href = "/pages/base"; // Замените на нужный URL
+            } else {
+                // Ошибка: выводим сообщение или делаем что-то еще
+                const errorData = await response.json(); // Получаем JSON-ответ с ошибкой
+                alert(`Ошибка: ${errorData.detail}`); // Выводим сообщение об ошибке
+            }
+
+        } catch (error) {
+            console.error('Ошибка при отправке формы:', error);
+            alert("Произошла ошибка при отправке формы. Пожалуйста, попробуйте еще раз.");
+        }
+    });
+  });
+
+  function validatePassword() {
+    const passwordInput = document.getElementById("password");
+
+    if (passwordInput.value.length < 4) {
+      alert("Пароль должен быть не менее 4 символов");
+      return false;
+    }
+
+    return true;
+  }
+</script>
+{% endblock %}
+
+{% block content %}
+<p>Вход в систему</p>
+<form action="/auth/jwt/login" method="POST" onsubmit="return validatePassword()">
+  <input type="text" id="username" name="username" placeholder="Имя пользователя" required>
+  <input type="password" id="password" name="password" placeholder="Пароль" required>
+  <button type="submit">Войти</button>
+</form>
+{% endblock %}

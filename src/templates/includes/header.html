@@ -1,9 +1,40 @@
 <nav class="flex justify-between text-3xl my-3">
     <ul class="flex ml-10">
-        <li>Натрейдил</li>
+        <li>Bright</li>
     </ul>
-    <ul class="flex gap-5 mr-10">
-        <li>Мой аккаунт</li>
-        <li>Выйти</li>
+    <ul class="flex gap-5 mr-10" id="auth-links">
+        <li><a href="/me">Мой аккаунт</a></li>
+        <li><a href="/auth/jwt/logout">Выйти</a></li>
     </ul>
 </nav>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const authLinks = document.getElementById('auth-links');
+
+    async function checkAuth() {
+      try {
+        const response = await fetch('/checker'); // Замените на ваш URL
+        if (response.ok) {
+          // Авторизован: "Мой аккаунт" и "Выйти"
+          authLinks.innerHTML = `
+            <li><a href="/me">Мой аккаунт</a></li>
+            <li><a href="/auth/jwt/logout">Выйти</a></li>
+          `;
+        } else if (response.status === 401) {
+          // Не авторизован: "Войти" и "Зарегистрироваться"
+          authLinks.innerHTML = `
+            <li><a href="/login">Войти</a></li>
+            <li><a href="/register">Зарегистрироваться</a></li>
+          `;
+        } else {
+          console.error('Ошибка:', response.status);
+        }
+      } catch (error) {
+        console.error('Ошибка:', error);
+      }
+    }
+
+    checkAuth(); // Выполните проверку при загрузке страницы
+  });
+</script>

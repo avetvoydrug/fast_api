@@ -9,6 +9,17 @@
     {% block head %}
     {% endblock %}
     <title>Натрейдил</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /*  Занимаем  всю  высоту  экрана */
+        }
+
+        #content {
+            flex: 1; /*  Занимаем  оставшееся  место  */
+        }
+    </style>
 </head>
 <body>
     {% include "includes/header.html" %}

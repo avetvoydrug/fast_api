@@ -13,3 +13,8 @@ created_at = Annotated[datetime, mapped_column(server_default=text("TIMEZONE('ut
 updated_at = Annotated[datetime, mapped_column(
         server_default=text("TIMEZONE('utc', now())"),
         onupdate=datetime.utcnow)]
+
+exceptions = {
+    400: "400.html",
+    401: "401.html"
+}

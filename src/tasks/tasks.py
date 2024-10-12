@@ -2,14 +2,16 @@ import smtplib
 from email.message import EmailMessage
 
 from celery import Celery
-from config import SMTP_USER, SMTP_PASSWORD
+from config import SMTP_USER, SMTP_PASSWORD, REDIS_PORT, REDIS_HOST
 
 from time import sleep
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 465
 
-celery = Celery('tasks', broker='redis://localhost:6379//0', backend='redis://localhost:6379//0')
+celery = Celery('tasks', 
+                broker=f'redis://{REDIS_HOST}:{REDIS_PORT}//0', 
+                backend=f'redis://{REDIS_HOST}:{REDIS_PORT}//0')
 
 
 def get_email_template_dashboard(username: str):

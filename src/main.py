@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 
 from database import create_db_and_tables
 #app
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.staticfiles import StaticFiles
@@ -25,11 +25,16 @@ from operations.router import router as router_operation
 from tasks.router import router as router_task
 from pages.router import router as router_template
 from chat.router import router as router_chat
+from auth.router import router as router_auth_pages
+
+from pages.router import templates
+
+from config import REDIS_HOST, REDIS_PORT
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    redis = aioredis.from_url("redis://localhost", decode_responses=True)
+    redis = aioredis.from_url(f"redis://{REDIS_HOST}:{REDIS_PORT}", decode_responses=True)
     FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
     yield
 
@@ -55,7 +60,7 @@ app.include_router(router_operation)
 app.include_router(router_task)
 app.include_router(router_template)
 app.include_router(router_chat)
-
+app.include_router(router_auth_pages)
 
 origins = [
     "http://localhost:8000",
@@ -70,6 +75,10 @@ app.add_middleware(
                    "Authorization"],
 )
 
+# @app.exception_handler(HTTPException)
+# async def http_exception_handler(request: Request, exc: HTTPException):
+#     print(exc.status_code)
+#     return templates.TemplateResponse('exceptions/401.html', {"request": request})
 
 # @app.on_event("startup")
 # async def startup_event():

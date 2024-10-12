@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>Регистрация</title>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const registerForm = document.querySelector("form");
+
+    registerForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      try {
+        const formData = new FormData(registerForm);
+        const data = { // Создаем объект JSON
+          email: formData.get('email'),
+          password: formData.get('password'),
+          username: formData.get('username'),
+          role_id: parseInt(formData.get('role_id')) // Преобразуем строку в число
+        };
+
+        const response = await fetch('/auth/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json' 
+          },
+          body: JSON.stringify(data) // Отправляем JSON-данные
+        });
+
+        if (response.ok) {
+          // Успешная регистрация: перенаправляем на страницу входа
+          window.location.href = "/login"; 
+        } else {
+          // Ошибка: выводим сообщение или делаем что-то еще
+          const errorData = await response.json(); 
+          alert(`Ошибка: ${errorData.detail}`); 
+        }
+
+      } catch (error) {
+        console.error('Ошибка при отправке формы:', error);
+        alert("Произошла ошибка при отправке формы. Пожалуйста, попробуйте еще раз.");
+      }
+    });
+  });
+</script>
+{% endblock %}
+
+{% block content %}
+<p>Регистрация</p>
+<form action="/auth/register" method="POST"> 
+  <label for="email">Email:</label>
+  <input type="email" id="email" name="email" placeholder="Email" required>
+
+  <label for="password">Пароль:</label>
+  <input type="password" id="password" name="password" placeholder="Пароль" required>
+
+  <label for="username">Имя пользователя:</label>
+  <input type="text" id="username" name="username" placeholder="Имя пользователя" required>
+
+  <label for="role_id">ID роли:</label>
+  <input type="number" id="role_id" name="role_id" placeholder="ID роли" required> 
+
+  <button type="submit">Зарегистрироваться</button>
+</form>
+{% endblock %}
