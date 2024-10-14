@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi_users.db import SQLAlchemyBaseUserTable
+from fastapi_users.db import (SQLAlchemyBaseUserTable,
+                              SQLAlchemyBaseOAuthAccountTable)
 from sqlalchemy import (Table, Column, JSON, TIMESTAMP, 
                         Boolean, Integer, String, ForeignKey)
-from sqlalchemy.orm import mapped_column, Mapped, relationship
+from sqlalchemy.orm import mapped_column, Mapped, relationship, declared_attr
 
 from database import Base
 
@@ -59,3 +60,27 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         "Role",
         back_populates="users"
     )
+    oauth_accounts: Mapped[List["OAuthAccount"]] = relationship(
+        "OAuthAccount", 
+        back_populates= "user",
+        lazy="joined"
+    )
+
+#OAuth
+class OAuthAccount(SQLAlchemyBaseOAuthAccountTable[int], Base):
+    __tablename__ = "oauth_account"
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(Integer, 
+                                         ForeignKey(User.id, ondelete="cascade"), nullable=False)
+    
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates= "oauth_accounts"
+    )
+    #SQLAlchemyBaseOAuthAccountTable ожидается, 
+    #что общий тип будет определять фактический тип используемого вами идентификатора.
+    # @declared_attr
+    # def user_id(cls) -> Mapped[int]:
+    #     return mapped_column(Integer, 
+    #     ForeignKey("user_id", ondelete="cascade"), nullable=False

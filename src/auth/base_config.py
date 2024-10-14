@@ -1,11 +1,19 @@
 from fastapi import Depends
 from fastapi_users import FastAPIUsers
-from fastapi_users.authentication import CookieTransport, AuthenticationBackend
+from fastapi_users.authentication import (CookieTransport, AuthenticationBackend,
+                                          BearerTransport)
 from fastapi_users.authentication import JWTStrategy
+
+# OAuth2
+from httpx_oauth.clients.google import GoogleOAuth2
 
 from .manager import get_user_manager
 from .models import User 
-from config import SECRET_AUTH
+from config import SECRET_AUTH, GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET
+
+google_oauth_client = GoogleOAuth2(
+    GOOGLE_OAUTH_CLIENT_ID, 
+    GOOGLE_OAUTH_CLIENT_SECRET)
 
 # транспорт: то как токен будет передаваться по запросам
 # Bearer предлагают для мобилок, 
@@ -16,6 +24,7 @@ from config import SECRET_AUTH
 # Автоматически удаляется веб-браузерами по истечении срока действия.
 # Для максимальной безопасности требуется защита CSRF.
 # Сложнее работать вне браузера, например, с мобильным приложением или сервером.
+#bearer_transport = BearerTransport(tokenUrl="auth/jwt/login")
 cookie_transport = CookieTransport(cookie_name='bonds', cookie_max_age=3600)
 
 # стратегия: то как генерируется и защищается токен
@@ -40,6 +49,7 @@ fastapi_users = FastAPIUsers[User, int](
 
 # можно прикалываться с зависимостями
 current_user = fastapi_users.current_user()
+current_active_user = fastapi_users.current_user(active=True)
 
 async def check_auth(user: User = Depends(fastapi_users.current_user())):
     print("something here")

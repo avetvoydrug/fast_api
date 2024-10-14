@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional
 
 from operations.router import get_specific_operations
-
+from auth.base_config import current_user
 
 router = APIRouter(
     prefix='/pages',
@@ -25,3 +25,7 @@ def get_search_page(request: Request, operations=Depends(get_specific_operations
             {"request": request, "operations": operations["data"]})
     except Exception:
         return 'sss'
+    
+@router.get("/protected", dependencies=[Depends(current_user)])
+async def rr():
+    print('sss')

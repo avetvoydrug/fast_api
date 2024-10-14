@@ -1,9 +1,8 @@
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from database import create_db_and_tables
 #app
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 
 from fastapi.staticfiles import StaticFiles
@@ -17,8 +16,9 @@ from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 
 #authentication
-from auth.base_config import auth_backend, fastapi_users
-from auth.schemas import UserCreate, UserRead
+from auth.base_config import auth_backend, fastapi_users, google_oauth_client, current_active_user
+from auth.schemas import UserCreate, UserRead, UserUpdate
+from auth.models import User
 
 #routers
 from operations.router import router as router_operation
@@ -29,7 +29,7 @@ from auth.router import router as router_auth_pages
 
 from pages.router import templates
 
-from config import REDIS_HOST, REDIS_PORT
+from config import REDIS_HOST, REDIS_PORT, SECRET_AUTH
 
 
 @asynccontextmanager
@@ -40,6 +40,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
 app = FastAPI(
     title='why so hard to be God',
+    # включи, когда рэдис включишь!!
     # lifespan=lifespan
     )
 
@@ -55,12 +56,42 @@ app.include_router(
     prefix="/auth", # path
     tags=["auth"], # тэг в документации http://host:port/docs
 )
+#OAuth
+app.include_router(
+    fastapi_users.get_oauth_router(
+        google_oauth_client,
+        auth_backend,
+        SECRET_AUTH,
+        # associate_by_email=False, 
+        # Если мы уверены, что емэйлы проверяеются при регистрации ставим True
+        # Тогда OAuthAccount будет автоматически связываться с существующим User,
+        # иначе, если с этим e-mail у нас уже есть User - будет возвращаться 400
+    ),
+    prefix="/auth/google",
+    tags=["auth"]
+)
+# app.include_router(
+#     fastapi_users.get_oauth_associate_router(google_oauth_client, UserRead, SECRET_AUTH),
+#     prefix="/auth/associate/google",
+#     tags=["auth"],
+# )
+#users router
+app.include_router(
+    fastapi_users.get_users_router(UserRead, UserUpdate),
+    prefix="/users",
+    tags=["users"]
+)
 
+#Other routers
 app.include_router(router_operation)
 app.include_router(router_task)
 app.include_router(router_template)
 app.include_router(router_chat)
 app.include_router(router_auth_pages)
+
+# @app.get("/authenticated-route")
+# async def authenticated_route(user: User = Depends(current_active_user)):
+#     return {"message": f"Hello {user.email}!"}
 
 origins = [
     "http://localhost:8000",
