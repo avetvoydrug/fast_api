@@ -20,12 +20,18 @@ from auth.base_config import auth_backend, fastapi_users, google_oauth_client, c
 from auth.schemas import UserCreate, UserRead, UserUpdate
 from auth.models import User
 
+# #OAuth
+# from auth.router import get_oauth_router
+# from auth.manager import get_user_manager
+
 #routers
 from operations.router import router as router_operation
 from tasks.router import router as router_task
 from pages.router import router as router_template
 from chat.router import router as router_chat
 from auth.router import router as router_auth_pages
+from users.router import router as router_users
+from users.crud.router import router as router_users_crud
 
 from pages.router import templates
 
@@ -39,7 +45,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     yield
 
 app = FastAPI(
-    title='why so hard to be God',
+    title='why so hard to be God'
     # включи, когда рэдис включишь!!
     # lifespan=lifespan
     )
@@ -62,6 +68,7 @@ app.include_router(
         google_oauth_client,
         auth_backend,
         SECRET_AUTH,
+        # redirect_url="http://localhost:8000/login/google/callback"
         # associate_by_email=False, 
         # Если мы уверены, что емэйлы проверяеются при регистрации ставим True
         # Тогда OAuthAccount будет автоматически связываться с существующим User,
@@ -76,11 +83,11 @@ app.include_router(
 #     tags=["auth"],
 # )
 #users router
-app.include_router(
-    fastapi_users.get_users_router(UserRead, UserUpdate),
-    prefix="/users",
-    tags=["users"]
-)
+# app.include_router(
+#     fastapi_users.get_users_router(UserRead, UserUpdate),
+#     prefix="/users",
+#     tags=["users"]
+# )
 
 #Other routers
 app.include_router(router_operation)
@@ -88,10 +95,8 @@ app.include_router(router_task)
 app.include_router(router_template)
 app.include_router(router_chat)
 app.include_router(router_auth_pages)
-
-# @app.get("/authenticated-route")
-# async def authenticated_route(user: User = Depends(current_active_user)):
-#     return {"message": f"Hello {user.email}!"}
+app.include_router(router_users)
+app.include_router(router_users_crud)
 
 origins = [
     "http://localhost:8000",

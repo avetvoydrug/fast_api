@@ -5,8 +5,11 @@ from fastapi.responses import RedirectResponse
 from fastapi_users import (BaseUserManager, IntegerIDMixin, schemas, models, 
                            exceptions, InvalidPasswordException)
 
+from sqlalchemy import insert
+from sqlalchemy.ext.asyncio import AsyncSession
+from database import get_async_session
 from .schemas import UserCreate
-from .models import User
+from .models import User, UserDataExtended
 from .utils import get_user_db
 
 from config import SECRET_AUTH, TOKEN_AUDIENCE, VERIFY_TOKEN_AUDIENCE
@@ -20,7 +23,12 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     verification_token_lifetime_seconds = 3600
     verification_token_audience = VERIFY_TOKEN_AUDIENCE
 
-    async def on_after_register(self, user: User, request: Optional[Request] = None):
+    async def on_after_register(self, user: User, request: Optional[Request] = None,
+                                session: AsyncSession = Depends(get_async_session)):
+        stmt = (insert(UserDataExtended)
+                 .values(user_id=user.id))
+        await session.execute(stmt)
+        await session.commit()
         print(f"User {user.id} has registered.")
 
     async def on_after_forgot_password(
@@ -89,7 +97,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                         user, existing_oauth_account, oauth_account_dict
                     )
 
-        return user, RedirectResponse(url="/pages/base")
+        return user
         
     async def create(
         self,

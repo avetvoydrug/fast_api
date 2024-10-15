@@ -1,14 +1,16 @@
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional
 
 from fastapi_users.db import (SQLAlchemyBaseUserTable,
                               SQLAlchemyBaseOAuthAccountTable)
 from sqlalchemy import (Table, Column, JSON, TIMESTAMP, 
-                        Boolean, Integer, String, ForeignKey)
+                        Boolean, Integer, String, ForeignKey,
+                        ARRAY, DATE)
 from sqlalchemy.orm import mapped_column, Mapped, relationship, declared_attr
 
+from .enums import SexEnum, RelationshipStatusEnum
 from database import Base
-
+from utils import unique_int_list
 # ИМПЕРАТИВНЫЙ 
 # role = Table(
 #     'role',
@@ -48,6 +50,9 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     hashed_password: Mapped[str] = mapped_column(
         String(length=1024), nullable=False
     )
+    friend_list: Mapped[unique_int_list]
+    sent_friend_reqest: Mapped[unique_int_list]
+    received_friend_requests: Mapped[unique_int_list]
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
@@ -64,6 +69,30 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         "OAuthAccount", 
         back_populates= "user",
         lazy="joined"
+    )
+    user_data: Mapped["UserDataExtended"] = relationship(
+        "UserDataExtended",
+        back_populates= "user"
+    )
+
+
+class UserDataExtended(Base):
+    __tablename__ = "user_data_extended"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey(User.id, ondelete="cascade"),primary_key=True)
+    first_name: Mapped[str] = mapped_column(String(64), nullable=True)
+    last_name: Mapped[str] = mapped_column(String(64), nullable=True)
+    unique_id: Mapped[str] = mapped_column(String(58), nullable=True, unique=True)
+    birth_date: Mapped[date] = mapped_column(DATE, nullable=True)
+    sex: Mapped["SexEnum"] = mapped_column(nullable=True) 
+    relat_status: Mapped["RelationshipStatusEnum"] = mapped_column(nullable=True)
+    location: Mapped[str] = mapped_column(String(100), nullable=True)
+    education: Mapped[str] = mapped_column(String(100), nullable=True)
+    interests: Mapped[str] = mapped_column(String(500), nullable=True)
+
+    user: Mapped["User"] = relationship(
+        "User",
+        back_populates="user_data"
     )
 
 #OAuth
