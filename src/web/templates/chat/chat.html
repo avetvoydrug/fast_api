@@ -17,7 +17,7 @@
 </div>
 <script>
     async function getLastMessages() {
-        const url = 'http://localhost:8000/chat/last_messages'
+        const url = 'http://localhost:8000/api/v1/chat/last_messages'
         const response = await fetch(url, {
             method: 'GET'
         })
@@ -43,7 +43,7 @@
 
     let client_id = Date.now()
     document.querySelector("#ws-id").textContent = client_id;
-    let ws = new WebSocket(`ws://localhost:8000/chat/ws/${client_id}`);
+    let ws = new WebSocket(`ws://localhost:8000/api/v1/chat/ws/${client_id}`);
     ws.onmessage = function (event) {
         appendMessage(`${event.data} (${new Date().toLocaleString()})`) //  Добавляем  время  к  новому  сообщению
     };

@@ -5,15 +5,15 @@ from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import async_session_maker, get_async_session
-from .models import Message
+from models.chat import Message
+from auth.base_config import auth_dependency_for_html
 
 
 router = APIRouter(
-    prefix="/chat",
-    tags=["Chat"]
+    prefix="/api/v1/chat",
+    tags=["chat"]
 )
 
-templates = Jinja2Templates(directory="templates")
 
 class ConnectionManager:
     def __init__(self):
@@ -58,9 +58,6 @@ async def get(session: AsyncSession = Depends(get_async_session)):
     messages_list = [msg[0].as_dict() for msg in messages.all()]
     return messages_list
 
-@router.get("/")
-async def get(request: Request):
-    return templates.TemplateResponse("chat/chat.html", {"request": request})
 
 
 @router.websocket("/ws/{client_id}")

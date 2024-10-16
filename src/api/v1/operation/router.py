@@ -7,13 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi_cache.decorator import cache
 
 from database import get_async_session
-from .models import Operation
+from models.operation import Operation
 from .schemas import OperationModelAddDTO, OperationModelDTO
 from utils import DefaultResponse
 
 router = APIRouter(
-    prefix='/operation',
-    tags=['Operation'],
+    prefix='/api/v1/operation',
+    tags=['operation'],
 )
 
 class MultipleOperationResponse(DefaultResponse):

@@ -1,6 +1,6 @@
 from typing import Optional, Union
 
-from fastapi import Depends, Request
+from fastapi import Depends, Request, Response
 from fastapi.responses import RedirectResponse
 from fastapi_users import (BaseUserManager, IntegerIDMixin, schemas, models, 
                            exceptions, InvalidPasswordException)
@@ -41,7 +41,28 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
     ):
         print(f"Verification requested for user {user.id}. Verification token: {token}")
 
+    async def on_after_login(
+        self,
+        user: models.UP,
+        request: Optional[Request] = None,
+        response: Optional[Response] = None,
+    ) -> None:
+        """
+        Perform logic after user login.
+
+        *You should overload this method to add your own logic.*
+
+        :param user: The user that is logging in
+        :param request: Optional FastAPI request
+        :param response: Optional response built by the transport.
+        Defaults to None
+        """
+        url = str(request.base_url) + f"users/profile/{user.id}"
+        print(url)
+        return RedirectResponse(url) # pragma: no cover
+
     #переопределён, т.к. в проекте кастомная модель пользователя
+        # и нужен редирект
     async def oauth_callback(
         self: "BaseUserManager[models.UOAP, models.ID]",
         oauth_name: str,
@@ -96,7 +117,6 @@ class UserManager(IntegerIDMixin, BaseUserManager[User, int]):
                     user = await self.user_db.update_oauth_account(
                         user, existing_oauth_account, oauth_account_dict
                     )
-
         return user
         
     async def create(

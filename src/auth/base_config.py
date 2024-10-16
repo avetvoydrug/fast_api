@@ -1,4 +1,4 @@
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import (CookieTransport, AuthenticationBackend,
                                           BearerTransport)
@@ -50,7 +50,11 @@ fastapi_users = FastAPIUsers[User, int](
 # можно прикалываться с зависимостями
 current_user = fastapi_users.current_user()
 current_active_user = fastapi_users.current_user(active=True)
+is_auth_user = fastapi_users.current_user(optional=True)
 
-async def check_auth(user: User = Depends(fastapi_users.current_user())):
-    print("something here")
-    return user
+async def auth_dependency_for_html(request: Request,
+                           cur_user: User = Depends(is_auth_user)):
+    context = {
+        "cur_user": cur_user,
+    }
+    return context

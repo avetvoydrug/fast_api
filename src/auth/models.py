@@ -51,7 +51,7 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         String(length=1024), nullable=False
     )
     friend_list: Mapped[unique_int_list]
-    sent_friend_reqest: Mapped[unique_int_list]
+    sent_friend_request: Mapped[unique_int_list]
     received_friend_requests: Mapped[unique_int_list]
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(
@@ -70,10 +70,7 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         back_populates= "user",
         lazy="joined"
     )
-    user_data: Mapped["UserDataExtended"] = relationship(
-        "UserDataExtended",
-        back_populates= "user"
-    )
+    user_data: Mapped["UserDataExtended"] = relationship(back_populates= "user")
 
 
 class UserDataExtended(Base):
@@ -90,10 +87,7 @@ class UserDataExtended(Base):
     education: Mapped[str] = mapped_column(String(100), nullable=True)
     interests: Mapped[str] = mapped_column(String(500), nullable=True)
 
-    user: Mapped["User"] = relationship(
-        "User",
-        back_populates="user_data"
-    )
+    user: Mapped["User"] = relationship(back_populates="user_data")
 
 #OAuth
 class OAuthAccount(SQLAlchemyBaseOAuthAccountTable[int], Base):

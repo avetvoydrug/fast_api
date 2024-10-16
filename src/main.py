@@ -16,25 +16,30 @@ from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 
 #authentication
-from auth.base_config import auth_backend, fastapi_users, google_oauth_client, current_active_user
-from auth.schemas import UserCreate, UserRead, UserUpdate
-from auth.models import User
+from auth.base_config import auth_backend, fastapi_users, google_oauth_client
+from auth.schemas import UserCreate, UserRead
 
 # #OAuth
 # from auth.router import get_oauth_router
 # from auth.manager import get_user_manager
 
-#routers
-from operations.router import router as router_operation
+#routers pages
+from web.pages.auth.router_pages import router as router_pages_auth
+from web.pages.base.router_pages import router as router_pages_base
+from web.pages.chat.router_pages import router as router_pages_chat
+from web.pages.operations.router_pages import router as router_pages_operation
+from web.pages.user.router_pages import router as router_pages_user
+
+
+#routers API #v1
+from api.v1.operation.router import router as router_operation_v1
+from api.v1.chat.router import router as router_chat_v1
+from api.v1.user.router import router as router_user_v1
+
+#celery tasks
 from tasks.router import router as router_task
-from pages.router import router as router_template
-from chat.router import router as router_chat
-from auth.router import router as router_auth_pages
-from users.router import router as router_users
-from users.crud.router import router as router_users_crud
 
-from pages.router import templates
-
+#redis config
 from config import REDIS_HOST, REDIS_PORT, SECRET_AUTH
 
 
@@ -50,7 +55,8 @@ app = FastAPI(
     # lifespan=lifespan
     )
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="web/static"), name="static")
+
 
 app.include_router(
     fastapi_users.get_auth_router(auth_backend),
@@ -62,6 +68,13 @@ app.include_router(
     prefix="/auth", # path
     tags=["auth"], # тэг в документации http://host:port/docs
 )
+#users router
+# app.include_router(
+#     fastapi_users.get_users_router(UserRead, UserUpdate),
+#     prefix="/users",
+#     tags=["users"]
+# )
+
 #OAuth
 app.include_router(
     fastapi_users.get_oauth_router(
@@ -82,21 +95,22 @@ app.include_router(
 #     prefix="/auth/associate/google",
 #     tags=["auth"],
 # )
-#users router
-# app.include_router(
-#     fastapi_users.get_users_router(UserRead, UserUpdate),
-#     prefix="/users",
-#     tags=["users"]
-# )
 
-#Other routers
-app.include_router(router_operation)
+# Celery Task Router
 app.include_router(router_task)
-app.include_router(router_template)
-app.include_router(router_chat)
-app.include_router(router_auth_pages)
-app.include_router(router_users)
-app.include_router(router_users_crud)
+
+# Pages Routers
+app.include_router(router_pages_auth)
+app.include_router(router_pages_user)
+app.include_router(router_pages_chat)
+app.include_router(router_pages_base)
+app.include_router(router_pages_operation)
+
+
+# API v1 Routers
+app.include_router(router_user_v1)
+app.include_router(router_chat_v1)
+app.include_router(router_operation_v1)
 
 origins = [
     "http://localhost:8000",

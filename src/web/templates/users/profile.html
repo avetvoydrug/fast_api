@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock head %}
+{% block content %}
+<h1>{{ request_user.username }}</h1>
+<hr>
+{% if is_owner %}
+    <a href="/users/crud/change-name">Edit</a>
+{% elif cur_user != None %}
+    <a href="/send-friend-request/{{request_user.id}}">Add {{request_user.username}} to friend list</a>
+    <p>что из этого более лояльно для социофобов</p>
+    <p>Send friend request?</p>
+    <p>Delete from friend list</p>
+{% else %}
+    add
+{% endif %}
+{% endblock content %}

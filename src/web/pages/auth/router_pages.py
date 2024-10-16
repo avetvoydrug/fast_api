@@ -10,60 +10,54 @@ from httpx_oauth.oauth2 import BaseOAuth2, OAuth2Token
 from fastapi import (APIRouter, Depends, Request, 
                      Cookie, HTTPException)
 from fastapi.responses import RedirectResponse
+from fastapi.templating import Jinja2Templates
 from fastapi_users import jwt
 
 from config import SECRET_AUTH, TOKEN_ALGORITHM, TOKEN_AUDIENCE
 
 from auth.base_config import fastapi_users
-from pages.router import templates
-from .base_config import current_active_user, current_user, get_user_manager, google_oauth_client
-from .models import User
+
+from auth.base_config import (current_active_user, current_user, get_user_manager, 
+                          google_oauth_client, auth_dependency_for_html)
+from auth.models import User
 
 
 router = APIRouter(
     prefix="",
-    tags=["AuthPages"]
+    tags=["auth"]
 )
 
-@router.get("/checker")
-async def protected_route(request: Request, bonds: str = Cookie(None)):
-    if not bonds:
-        raise HTTPException(status_code=401, detail="Authorization cookie is missing")
-    print(bonds)
-    try:
-        payload = jwt.decode_jwt(
-            encoded_jwt=bonds, 
-            secret=SECRET_AUTH,
-            audience=[TOKEN_AUDIENCE],
-            algorithms=[TOKEN_ALGORITHM])
-        user_id = payload.get("sub")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Unauthorised")
-        print(f"CUSH: {user_id}")
-    except InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-    #Получение юзера; Что делать при рэйзе
-
-
-
-    # if payload.get("exp") is not None and payload["exp"] < time.time():
-    #     raise HTTPException(status_code=401, detail="Token has expired")
-
-    # return JSONResponse(content={"user": payload})
-
+template = Jinja2Templates(directory="web/templates")
+#Pages
 @router.get("/login")
-async def login_page(request: Request):
-    return templates.TemplateResponse("auth/login.html", {"request": request})
+async def login_page(request: Request,
+                     context: dict = Depends(auth_dependency_for_html)):
+    context["request"] = request
+    return template.TemplateResponse("auth/login.html", context)
 
 @router.get("/register")
-async def register_page(request: Request):
-    return templates.TemplateResponse("auth/register.html", {"request": request})    
+async def register_page(request: Request,
+                        context: dict = Depends(auth_dependency_for_html)):
+    context["request"] = request
+    return template.TemplateResponse("auth/register.html", context)
 
+@router.get("/logout")
+async def logout_page(request: Request,
+                      context: dict = Depends(auth_dependency_for_html)):
+    async with httpx.AsyncClient(cookies=request.cookies) as client:
+        url = str(request.base_url) + "auth/jwt/logout"
+        # token = request.cookies.get("bonds")
+        # if not token:
+        #     raise HTTPException(status_code=401, detail="Unauthorized")
+        
+        response = await client.post(url)
+        context["request"] = request
+        return template.TemplateResponse("auth/logout.html", context)    
 
+#help links
 # OAuth
 @router.get("/login/google")
 async def google_auth(request: Request):
-    # url = request.url_for('auth/google/authorize')
     url = str(request.base_url) + "auth/google/authorize"
     async with httpx.AsyncClient() as client:
         response = await client.get(url)
@@ -81,7 +75,7 @@ async def google_auth(request: Request):
 
 @router.get("/authenticated-route")
 async def authenticated_route(request: Request, user: User = Depends(current_active_user)):
-    url = str(request.base_url) + f"users/user/me/{user.id}"
+    url = str(request.base_url) + f"users/profile/{user.id}"
     return RedirectResponse(url=url,)
 
 

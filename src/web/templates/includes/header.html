@@ -1,0 +1,35 @@
+<div>
+  <nav class="flex justify-between text-3xl my-3">
+      <ul class="flex ml-10">
+          <li><a href="/main">Bright</a></li>
+      </ul>
+      <ul class="flex gap-5 mr-10" id="auth-links">
+        {% if cur_user != None %}
+          <li><a href="/users/profile/{{cur_user.id}}">Мой аккаунт</a></li>
+          <li><button id="logout-button">Выйти</button></li>
+        {% else %}
+          <li><a href="/login">Войти</a></li>
+          <li><a href="/register">Зарегистрироваться</a></li>
+        {% endif %}
+      </ul>
+  </nav>
+  <script>
+    const logoutButton = document.getElementById('logout-button');
+    logoutButton.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/auth/jwt/logout', {
+          method: 'POST',
+          credentials: 'same-origin' 
+        });
+
+        if (response.ok) {
+          window.location.href = '/logout'; 
+        } else {
+          console.error('Ошибка при выходе:', response.status);
+        }
+      } catch (error) {
+        console.error('Ошибка при выходе:', error);
+      }
+    });
+  </script>
+</div>
