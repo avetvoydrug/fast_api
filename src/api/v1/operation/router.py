@@ -1,4 +1,4 @@
-from typing import Any, List, Optional
+from typing import Annotated, Any, List, Optional
 from time import sleep
 from fastapi import APIRouter, Depends, Request
 from fastapi.exceptions import HTTPException
@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi_cache.decorator import cache
 
 from database import get_async_session
+from services.operation import OperationService
+from api.v1.dependencies import operation_service
 from models.operation import Operation
 from .schemas import OperationModelAddDTO, OperationModelDTO
 from utils import DefaultResponse
@@ -16,12 +18,14 @@ router = APIRouter(
     tags=['operation'],
 )
 
+operation_depend = Annotated[OperationService, Depends(operation_service)]
+
 class MultipleOperationResponse(DefaultResponse):
     #data: Optional[Any]
     data: List[OperationModelDTO]
 
 class AddOperationResponse(DefaultResponse):
-    data: OperationModelAddDTO
+    data: int
 
 @router.get('/', response_model=MultipleOperationResponse)
 async def get_specific_operations(
@@ -55,18 +59,20 @@ async def get_specific_operations(
 
 @router.post('/', response_model=AddOperationResponse)
 async def post_specific_operations(
-    new_operation: OperationModelAddDTO, 
-    session: AsyncSession = Depends(get_async_session)
-    ):
-    stmt = insert(Operation).values(**new_operation.dict())
-    await session.execute(stmt)
-    await session.commit()
+    new_operation: OperationModelAddDTO,
+    operation_service: operation_depend):
+    new_operation_id = await operation_service.add_operation(new_operation)
     return {
         "status": "success",
-        "data": new_operation,
+        "data": new_operation_id,
         "details": None
         }
 
+@router.get("/www")
+async def get_operation(id: int,
+                        operation_service: operation_depend):
+    operation = await operation_service.get_operation(id)
+    return operation
 
 @router.get('/cached_operation')
 @cache(expire=60)

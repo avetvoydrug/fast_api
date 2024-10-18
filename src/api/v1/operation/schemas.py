@@ -12,7 +12,7 @@ class OperationModelAddDTO(BaseModel):
         json_schema_extra = {
             "example": {
                 "quantity": "100",
-                "figi": "BBG000BPH474",
+                "figi": "BBGBPH474",
                 "instrument_type": "stock",
                 "type": "buy"
             }

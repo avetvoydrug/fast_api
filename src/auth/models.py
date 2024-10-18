@@ -10,7 +10,7 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship, declared_attr
 
 from .enums import SexEnum, RelationshipStatusEnum
 from database import Base
-from utils import unique_int_list
+from src.utils import created_at
 # ИМПЕРАТИВНЫЙ 
 # role = Table(
 #     'role',
@@ -42,7 +42,6 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     email: Mapped[str] = mapped_column(
         String(length=320), unique=True, index=True, nullable=False
     )
-    username: Mapped[str] = mapped_column(String, nullable=False)
     registered_at: Mapped[datetime] = mapped_column(
         TIMESTAMP, default=datetime.utcnow
     )
@@ -50,9 +49,9 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     hashed_password: Mapped[str] = mapped_column(
         String(length=1024), nullable=False
     )
-    friend_list: Mapped[unique_int_list]
-    sent_friend_request: Mapped[unique_int_list]
-    received_friend_requests: Mapped[unique_int_list]
+    # friend_list: Mapped[unique_int_list]
+    # sent_friend_request: Mapped[unique_int_list]
+    # received_friend_requests: Mapped[unique_int_list]
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
@@ -72,11 +71,30 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     )
     user_data: Mapped["UserDataExtended"] = relationship(back_populates= "user")
 
+    friendships: Mapped[List["User.id"]] = relationship(  
+        back_populates="user1", 
+        lazy="dynamic")
+    
+    friendships2: Mapped[List["User.id"]] = relationship(
+        back_populates="user2", 
+        lazy="dynamic")
+    
+    friend_requests_received: Mapped[List["FriendRequest"]] = relationship(
+        back_populates="receiver", 
+        lazy="dynamic")
+    
+    friend_requests_sent: Mapped[List["FriendRequest"]] = relationship(
+        back_populates="sender", lazy="dynamic")
+
 
 class UserDataExtended(Base):
     __tablename__ = "user_data_extended"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey(User.id, ondelete="cascade"),primary_key=True)
+    id: Mapped[int] = mapped_column(
+        ForeignKey(User.id, ondelete="cascade"), 
+        primary_key=True,
+        unique=True,
+        nullable=False)
     first_name: Mapped[str] = mapped_column(String(64), nullable=True)
     last_name: Mapped[str] = mapped_column(String(64), nullable=True)
     unique_id: Mapped[str] = mapped_column(String(58), nullable=True, unique=True)
@@ -88,6 +106,49 @@ class UserDataExtended(Base):
     interests: Mapped[str] = mapped_column(String(500), nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="user_data")
+
+
+class FriendShip(Base):
+    __tablename__ = "friend_ship"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user1_id: Mapped[int] = mapped_column(ForeignKey(User.id))
+    user2_id: Mapped[int] = mapped_column(ForeignKey(User.id))
+    created_at: Mapped[created_at]
+    # status for user1
+    # status for user2
+    user1: Mapped["User"] = relationship(
+        back_populates="friendships")
+    
+    user2: Mapped["User"] = relationship(
+        back_populates="friendships2")
+
+
+class FriendRequest(Base):
+    __tablename__ = "friend_request"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    sender_id: Mapped[int] = mapped_column(ForeignKey(User.id))
+    receiver_id: Mapped[int] = mapped_column(ForeignKey(User.id))
+
+    sender: Mapped["User"] = relationship(
+        back_populates="friend_requests_sent")
+    
+    receiver: Mapped["User"] = relationship(
+        back_populates="friend_requests_received")
+
+# SELECT * FROM User WHERE User.UserId IN (
+#     (SELECT User1_Id FROM Friend WHERE User2_Id = MY_USER_ID)
+#     UNION
+#     (SELECT User2_Id FROM Friend WHERE User1_Id = MY_USER_ID)
+# )
+
+# Following  
+# SELECT count(*) as cnt FROM FriendRequest WHERE User.id == user1_id !!! 1 - кто отправил
+
+# Followers
+# SELECT count(*) as cnt FROM FriendRequest WHERE User.id == user2_id  !!!!2 - кому отправлен
+
 
 #OAuth
 class OAuthAccount(SQLAlchemyBaseOAuthAccountTable[int], Base):

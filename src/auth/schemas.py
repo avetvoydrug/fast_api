@@ -10,7 +10,6 @@ PYDANTIC_V2 = PYDANTIC_VERSION.startswith("2.")
 class UserRead(schemas.BaseUser[int]):
     id: models.ID
     email: EmailStr
-    username: str
     role_id: int
     is_active: bool = True
     is_superuser: bool = False

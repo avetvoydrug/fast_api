@@ -1,3 +1,4 @@
+from typing import Annotated
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
@@ -9,6 +10,14 @@ from auth.base_config import current_user
 
 from database import get_async_session
 
+from api.v1.dependencies import user_service, user_data_service
+from services.user import UserService, UserDataExtendedService
+
+
+user_depend = Annotated[UserService, Depends(user_service)]
+user_data_extended_depend = Annotated[UserDataExtendedService, 
+    Depends(user_data_service)]
+
 router = APIRouter(
     prefix="/api/v1/users/crud",
     tags=["users"],
@@ -16,35 +25,28 @@ router = APIRouter(
 )
 
 
-@router.get("/read/{user_id}", response_model=UserRead)
-async def get_some_user(user_id: int,
-                   session: AsyncSession = Depends(get_async_session)):
-    query = (select(User)
-             .where(User.id == user_id))
-    result = await session.execute(query)
-    return result.scalar()
+@router.get("/read/{user_id}")
+async def get_some_user(user_id: int, user_service: user_depend):
+    user = await user_service.get_user(user_id)
+    return user
 
-@router.get("/me", response_model=UserRead)
-async def get_me(user: User = Depends(current_user),
-                 session: AsyncSession = Depends(get_async_session)):
-    query = (select(User)
-             .where(User.id==user.id))
-    result = await session.execute(query)
-    return result.scalar()
+@router.get("/me")
+async def get_me(user_service: user_depend, 
+                 user: User = Depends(current_user)):
+    return await user_service.get_user(int(user.id))
 
-@router.patch("/change-name", response_model=UserUpdate)
-async def change_name(new_name: str,
-                 user: User = Depends(current_user),
-                 session: AsyncSession = Depends(get_async_session)):
-    if new_name != user.username:
-            stmt = (update(User)
-                    .where(User.id==user.id))
-            await session.execute(stmt)
-            await session.commit()
-            return new_name
-    else:
-        return "новое имя должно отличаться от текущего"
-    
+@router.patch("/change-user-data")
+async def change_data(user_data_service: user_data_extended_depend,
+                      user: User = Depends(current_user),
+                      first_name: str = None,
+                      last_name: str = None,
+                      location: str = None,
+                      education: str = None,
+                      interests: str = None):
+    user = await user_data_service.update_user_data(user.id, first_name, last_name, 
+                                          location, education, interests)
+    return user
+
 @router.patch("/send-friend-request/{user_id}")
 async def send_friend_request(
      user_id: int,
