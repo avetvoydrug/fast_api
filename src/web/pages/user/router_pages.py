@@ -2,7 +2,10 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
 
 from auth.base_config import  auth_dependency_for_html
-from api.v1.user.router import get_some_user
+from auth.models import User
+from auth.schemas import UserRead
+from api.v1.user.router import (get_some_user, get_received_requests_list,
+                                get_friend_list, get_sent_requests_list)
 
 
 templates = Jinja2Templates(directory="web/templates")
@@ -34,19 +37,27 @@ router = APIRouter(
 
 # depends(): -> context{"is_auth e.t.c"}
 
+# Поменять UserRead модель. Добавить -> UserDataExtended. Friend(models)? 
+# BUGS
 @router.get("/profile/{user_id}")
 async def profile(request: Request,
                   context: dict = Depends(auth_dependency_for_html),  
-                  request_user = Depends(get_some_user)):
+                  request_user: UserRead = Depends(get_some_user),
+                  received_list = Depends(get_received_requests_list),
+                  friend_list = Depends(get_friend_list),
+                  sent_requests_list = Depends(get_sent_requests_list)):
     """
     param context: возвращает словарь с пользователем{"user": user}, который 
         сделал запрос или None, если пользователь не аутентифицирован
     param request_user: возвращает пользователя по id из пути
     """
-    cur_user = context.get("cur_user")
+    cur_user: User = context.get("cur_user")
     context.update({
         "request": request,
-        "request_user": request_user})
+        "request_user": request_user,
+        "received_list": received_list,
+        "friend_list": friend_list,
+        "sent_requests_list": sent_requests_list})
     if cur_user is None or request_user.id != cur_user.id:
         context.update({"cur_user": cur_user, "is_owner": False})
         return templates.TemplateResponse("users/profile.html", context)

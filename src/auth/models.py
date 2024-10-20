@@ -10,7 +10,7 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship, declared_attr
 
 from .enums import SexEnum, RelationshipStatusEnum
 from database import Base
-from src.utils import created_at
+from utils import created_at
 # ИМПЕРАТИВНЫЙ 
 # role = Table(
 #     'role',
@@ -71,20 +71,29 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     )
     user_data: Mapped["UserDataExtended"] = relationship(back_populates= "user")
 
-    friendships: Mapped[List["User.id"]] = relationship(  
-        back_populates="user1", 
-        lazy="dynamic")
+    friendships: Mapped[List["FriendShip"]] = relationship(
+        "FriendShip",
+        foreign_keys="[FriendShip.user1_id]",  
+        back_populates="user1",
+        overlaps="friendships2, user")
     
-    friendships2: Mapped[List["User.id"]] = relationship(
-        back_populates="user2", 
-        lazy="dynamic")
+    friendships2: Mapped[List["FriendShip"]] = relationship(
+        "FriendShip",
+        foreign_keys="[FriendShip.user2_id]",
+        back_populates="user2",
+        overlaps="friendships, user")
     
     friend_requests_received: Mapped[List["FriendRequest"]] = relationship(
-        back_populates="receiver", 
-        lazy="dynamic")
+        "FriendRequest",
+        foreign_keys="[FriendRequest.receiver_id]",
+        back_populates="receiver",
+        overlaps="friend_requests_sent, user")
     
     friend_requests_sent: Mapped[List["FriendRequest"]] = relationship(
-        back_populates="sender", lazy="dynamic")
+        "FriendRequest",
+        foreign_keys="[FriendRequest.sender_id]",
+        back_populates="sender",
+        overlaps="friend_requests_received, user")
 
 
 class UserDataExtended(Base):
@@ -118,12 +127,18 @@ class FriendShip(Base):
     # status for user1
     # status for user2
     user1: Mapped["User"] = relationship(
-        back_populates="friendships")
+        "User",
+        foreign_keys="[FriendShip.user1_id]",
+        back_populates="friendships",
+        overlaps="user2, friend_ship")
     
     user2: Mapped["User"] = relationship(
-        back_populates="friendships2")
+        "User",
+        foreign_keys="[FriendShip.user2_id]",
+        back_populates="friendships2",
+        overlaps="user1, friend_ship")
 
-
+# ПОЧИНИТЬ relationship
 class FriendRequest(Base):
     __tablename__ = "friend_request"
 
@@ -132,22 +147,16 @@ class FriendRequest(Base):
     receiver_id: Mapped[int] = mapped_column(ForeignKey(User.id))
 
     sender: Mapped["User"] = relationship(
-        back_populates="friend_requests_sent")
+        "User",
+        foreign_keys="[FriendRequest.sender_id]",
+        back_populates="friend_requests_sent",
+        overlaps="receiver, friend_request")
     
     receiver: Mapped["User"] = relationship(
-        back_populates="friend_requests_received")
-
-# SELECT * FROM User WHERE User.UserId IN (
-#     (SELECT User1_Id FROM Friend WHERE User2_Id = MY_USER_ID)
-#     UNION
-#     (SELECT User2_Id FROM Friend WHERE User1_Id = MY_USER_ID)
-# )
-
-# Following  
-# SELECT count(*) as cnt FROM FriendRequest WHERE User.id == user1_id !!! 1 - кто отправил
-
-# Followers
-# SELECT count(*) as cnt FROM FriendRequest WHERE User.id == user2_id  !!!!2 - кому отправлен
+        "User",
+        foreign_keys="[FriendRequest.receiver_id]",
+        back_populates="friend_requests_received",
+        overlaps="sender, friend_request")
 
 
 #OAuth
