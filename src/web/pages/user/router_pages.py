@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request
 from fastapi.templating import Jinja2Templates
 
-from auth.base_config import  auth_dependency_for_html
+from auth.base_config import  auth_dependency_for_html, is_auth_user
 from auth.models import User
 from auth.schemas import UserRead
 from api.v1.user.router import (get_some_user, get_received_requests_list,
@@ -37,11 +37,13 @@ router = APIRouter(
 
 # depends(): -> context{"is_auth e.t.c"}
 
+# не забываем, что страница - это просто интерфейс для пользователя, через который он может
+    # дёргать ручки
 # Поменять UserRead модель. Добавить -> UserDataExtended. Friend(models)? 
 # BUGS
 @router.get("/profile/{user_id}")
 async def profile(request: Request,
-                  context: dict = Depends(auth_dependency_for_html),  
+                  cur_user: User = Depends(is_auth_user),  
                   request_user: UserRead = Depends(get_some_user),
                   received_list = Depends(get_received_requests_list),
                   friend_list = Depends(get_friend_list),
@@ -51,7 +53,7 @@ async def profile(request: Request,
         сделал запрос или None, если пользователь не аутентифицирован
     param request_user: возвращает пользователя по id из пути
     """
-    cur_user: User = context.get("cur_user")
+    context = {}
     context.update({
         "request": request,
         "request_user": request_user,
