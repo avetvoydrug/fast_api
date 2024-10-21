@@ -2,9 +2,9 @@ from enum import Enum
 
 
 class SexEnum(Enum):
-    male = 'male'
-    female = 'female'
-    other = 'other'
+    male = 'мужской'
+    female = 'женский'
+    other = 'другой'
 
 class RelationshipStatusEnum(Enum):
     single = "Одинок"

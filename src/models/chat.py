@@ -18,3 +18,4 @@ class Message(Base):
 
 # date_time: Mapped[]
 # owner: Mapped[int] = mapped_column()
+# chat_id 

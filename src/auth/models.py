@@ -69,31 +69,37 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         back_populates= "user",
         lazy="joined"
     )
-    user_data: Mapped["UserDataExtended"] = relationship(back_populates= "user")
+    user_data: Mapped["UserDataExtended"] = relationship(
+        back_populates= "user",
+        lazy="selectin")
 
     friendships: Mapped[List["FriendShip"]] = relationship(
         "FriendShip",
         foreign_keys="[FriendShip.user1_id]",  
         back_populates="user1",
-        overlaps="friendships2, user")
+        overlaps="friendships2, user",
+        lazy="selectin")
     
     friendships2: Mapped[List["FriendShip"]] = relationship(
         "FriendShip",
         foreign_keys="[FriendShip.user2_id]",
         back_populates="user2",
-        overlaps="friendships, user")
+        overlaps="friendships, user",
+        lazy="selectin")
     
     friend_requests_received: Mapped[List["FriendRequest"]] = relationship(
         "FriendRequest",
         foreign_keys="[FriendRequest.receiver_id]",
         back_populates="receiver",
-        overlaps="friend_requests_sent, user")
+        overlaps="friend_requests_sent, user",
+        lazy="selectin")
     
     friend_requests_sent: Mapped[List["FriendRequest"]] = relationship(
         "FriendRequest",
         foreign_keys="[FriendRequest.sender_id]",
         back_populates="sender",
-        overlaps="friend_requests_received, user")
+        overlaps="friend_requests_received, user",
+        lazy="selectin")
 
 
 class UserDataExtended(Base):
@@ -145,6 +151,7 @@ class FriendRequest(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     sender_id: Mapped[int] = mapped_column(ForeignKey(User.id))
     receiver_id: Mapped[int] = mapped_column(ForeignKey(User.id))
+    created_at: Mapped[created_at]
 
     sender: Mapped["User"] = relationship(
         "User",

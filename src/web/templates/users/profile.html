@@ -3,18 +3,26 @@
 {% endblock head %}
 {% block content %}
 <h1>{{ request_user.email }}</h1>
-<h2>Кол-во друзей {{request_user.friend_list|count}}
-    Подписчики {{request_user.received_list|count}}
-    Подписки {{request_user.sent_requests_list|count}}</h2>
+<h2>Друзья {{cnt_friends}}
+    Подписчики {{cnt_followers}}
+    Подписки {{cnt_follows}}</h2>
 <hr>
 {% if is_owner %}
-    <a href="/users/crud/change-name">Edit</a> # изменить ссылку на редактирование
+    <a href="/users/me/edit-data">Edit</a> # изменить ссылку на редактирование
 {% elif cur_user != None %}
-    <a href="/send-friend-request/{{request_user.id}}">Add {{request_user.email}} to friend list</a>
-    <p>что из этого более лояльно для социофобов</p>
-    <p>Send friend request?</p>
-    <p>Delete from friend list</p>
+    {% if flags.get("no_action_flag") %}
+        <a href="/send-friend-request/{{request_user.id}}">Add {{request_user.email}} to friend list</a>
+        <p>что из этого более лояльно для социофобов</p>
+        <p>Send friend request?</p>
+    {% elif flags.get("friend_flag") %}
+        <p>Delete from friend list</p>
+    {% elif flags.get("follow_flag") %}
+        <p>Подписки</p>
+    {% elif flags.get("follower_flag") %}
+        <p>Ответить на предложение дружить</p>
+    {% endif %}
 {% else %}
-    add
+    <p>Чтобы добавить {{request_user.email}} в друзья</p>
+    <p>войдите или зарегистрируйтесь</p>
 {% endif %}
 {% endblock content %}

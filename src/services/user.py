@@ -17,9 +17,10 @@ class UserDataExtendedService:
         self.user_data_rep: AbstractRepository = user_data_rep()
 
     async def update_user_data(self, user_id: int, first_name,
-                          last_name, location, education, interests):
+                          last_name, birth_date, sex, location, education, interests):
         fields = await self.user_data_rep.update_full_info(user_id, first_name=first_name,
-                                              last_name=last_name, location=location,
+                                              last_name=last_name, birth_date=birth_date, 
+                                              sex=sex, location=location,
                                               education=education, interests=interests)
         return fields
     

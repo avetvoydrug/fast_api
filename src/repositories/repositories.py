@@ -18,7 +18,6 @@ class OperationRepository(SQLAlchemyRepository):
 
 class UserRepository(SQLAlchemyRepository):
     model = User
-    pyd_model_read = UserRead
 
 class UserDataExtendedRepository(SQLAlchemyRepository):
     model = UserDataExtended

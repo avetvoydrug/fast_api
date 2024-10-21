@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block head %}
+{% endblock head %}
+{% block content %}
+<form method="PATCH" action="/api/v1/users/crud/change-user-data">
+    <label for="first_name">Имя:</label>
+    <input type="text" id="first_name" name="first_name" value="{{ user_data.get("first_name") }}">
+
+    <label for="last_name">Фамилия:</label>
+    <input type="text" id="last_name" name="last_name" value="{{ user_data.get("last_name") }}">
+
+    <label for="birth_date">Дата  рождения:</label>
+    <input type="date" id="birth_date" name="birth_date" value="{{ user_data.get("birth_date") }}">
+
+    <label for="sex">Пол:</label>
+    <select id="sex" name="sex">
+        <option value="мужской" {% if user_data.get("sex") == 'мужской' %}selected{% endif %}>Мужской</option>
+        <option value="женский" {% if user_data.get("sex") == 'женский' %}selected{% endif %}>Женский</option>
+    </select>
+
+    <label for="loc">Местоположение:</label>
+    <input type="text" id="loc" name="loc" value="{{ user_data.get("loc") }}">
+
+    <label for="edu">Образование:</label>
+    <input type="text" id="edu" name="edu" value="{{ user_data.get("edu") }}">
+
+    <label for="interes">Интересы:</label>
+    <textarea id="interes" name="interes">{{ user_data.get("interes") }}</textarea>
+
+    <button type="submit">Изменить</button>
+</form>
+{% endblock content %}

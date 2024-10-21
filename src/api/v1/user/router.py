@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated, List
 from fastapi import APIRouter, Depends, Request, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,7 +10,7 @@ from auth.schemas import UserRead, UserUpdate
 from auth.base_config import current_user
 
 from database import get_async_session
-
+from auth.enums import SexEnum, RelationshipStatusEnum
 from api.v1.dependencies import (user_service, user_data_service,
                                  friends_requests_service, friend_ship_service)
 from services.user import (UserService, UserDataExtendedService,
@@ -46,11 +47,14 @@ async def change_data(user_data_service: user_data_extended_depend,
                       user: User = Depends(current_user),
                       first_name: str = None,
                       last_name: str = None,
+                      birth_date: date = None,
+                      sex: SexEnum = None,
                       location: str = None,
                       education: str = None,
                       interests: str = None):
-    user = await user_data_service.update_user_data(user.id, first_name, last_name, 
-                                          location, education, interests)
+    user = await user_data_service.update_user_data(user.id, first_name, last_name,
+                                                    birth_date, sex, location, 
+                                                    education, interests)
     return user
 
 @router.post("/send-friend-request/{user_id}")
