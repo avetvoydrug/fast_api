@@ -11,6 +11,8 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship, declared_attr
 from .enums import SexEnum, RelationshipStatusEnum
 from database import Base
 from utils import created_at
+from models.associations import association_table_user_chat
+
 # ИМПЕРАТИВНЫЙ 
 # role = Table(
 #     'role',
@@ -49,9 +51,6 @@ class User(SQLAlchemyBaseUserTable[int], Base):
     hashed_password: Mapped[str] = mapped_column(
         String(length=1024), nullable=False
     )
-    # friend_list: Mapped[unique_int_list]
-    # sent_friend_request: Mapped[unique_int_list]
-    # received_friend_requests: Mapped[unique_int_list]
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False
@@ -100,6 +99,18 @@ class User(SQLAlchemyBaseUserTable[int], Base):
         back_populates="sender",
         overlaps="friend_requests_received, user",
         lazy="selectin")
+    
+    own_messages: Mapped[List["Message"]] = relationship(
+        "Message",
+        back_populates="owner_user",
+        lazy="selectin"
+    )
+    chats: Mapped[List["Chat"]] = relationship(
+        "Chat",
+        secondary=association_table_user_chat,
+        back_populates="members",
+        lazy="selectin"
+    )
 
 
 class UserDataExtended(Base):

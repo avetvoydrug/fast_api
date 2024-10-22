@@ -35,6 +35,10 @@ class AbstractRepository(ABC):
     async def delete_one():
         raise NotImplementedError
     
+    # @abstractmethod
+    # async def get_with_params():
+    #     raise NotImplementedError
+    
 class SQLAlchemyRepository(AbstractRepository):
     model = None
     pyd_model_read: BaseModel = None
